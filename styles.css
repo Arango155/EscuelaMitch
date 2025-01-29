@@ -1,0 +1,26 @@
+
+.form{
+    background-color: rgb(235, 235, 235);
+    margin: 0 auto;
+    padding: 4%;
+}
+
+.form label {
+    margin: 2%;
+    font-weight: bold;
+    font-size: 20px;
+}
+
+.tab{
+    box-shadow: 2px 2px 2px 2px rgb(0.5, 0.5, 0.5, 0.5);
+    padding: 5%;
+}
+
+.form-control{
+    padding-bottom: 2%;
+}
+
+.form button {
+    width: 100%;
+    padding: 2%;
+}

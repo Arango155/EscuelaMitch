@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Escuela Mitch</title>
+  <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/167/167707.png">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
+<body>
+
+
+  <div class="container my-4">
+    <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#registroModal">Nuevo Registro</button>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="registroModalLabel">Formulario Registro de Estudiantes</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form name="submit-to-google-sheet" class="tag">
+            <div class="mb-3">
+              <label for="cui" class="form-label">CUI</label>
+              <input name="cui" type="text" class="form-control" placeholder="Escribe el CUI del estudiante" required>
+            </div>
+            <div class="mb-3">
+              <label for="nombre" class="form-label">Nombre</label>
+              <input name="nombre" type="text" class="form-control" placeholder="Escribe el nombre completo del estudiante" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Enviar</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Agregar modal de edición -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Editar Estudiante</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="edit-form">
+          <input type="hidden" id="edit-row-index">
+          <div class="mb-3">
+            <label for="edit-cui" class="form-label">CUI</label>
+            <input id="edit-cui" type="text" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label for="edit-nombre" class="form-label">Nombre</label>
+            <input id="edit-nombre" type="text" class="form-control" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Actualizar</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <div class="container my-5">
+    <hr>
+    <h2 class="my-4">Tabla de Estudiantes</h2>
+    <table class="table table-bordered">
+      <thead>
+        <tr id="table-head"></tr>
+      </thead>
+      <tbody id="table-body"></tbody>
+    </table>
+  </div>
+
+
+
+  <!-- Modal de Edición -->
+<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editModalLabel">Editar Estudiante</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editForm">
+          <input type="hidden" id="editRowIndex">
+          <div class="mb-3">
+            <label for="editNombre" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="editNombre" required>
+          </div>
+          <div class="mb-3">
+            <label for="editEdad" class="form-label">Edad</label>
+            <input type="number" class="form-control" id="editEdad" required>
+          </div>
+          <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+  <script>
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbz_6h_m-3u5ODSVZfSWkLNhxBVzaitij6uUtRU5WfC8HuRnGNpx9IRhXACcxVjEOePCEw/exec';
+    const form = document.forms['submit-to-google-sheet'];
+
+
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+        .then(response => {
+          console.log('Éxito!', response);
+          loadTableData();
+          Swal.fire({
+            title: 'Registro exitoso',
+            text: 'El estudiante ha sido registrado correctamente.',
+            icon: 'success',
+            confirmButtonText: 'Aceptar'
+          }).then(() => {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('registroModal'));
+            modal.hide();
+          });
+          form.reset();
+        })
+        .catch(error => console.error('Error!', error.message));
+    });
+
+    document.getElementById('editForm').addEventListener('submit', function(event) {
+  event.preventDefault();
+
+  const rowIndex = document.getElementById('editRowIndex').value;
+  const nombre = document.getElementById('editNombre').value;
+  const edad = document.getElementById('editEdad').value;
+
+  fetch(scriptURL, {
+    method: 'POST',
+    body: JSON.stringify({
+      action: 'editar',
+      rowIndex: rowIndex,
+      nombre: nombre,
+      edad: edad
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    Swal.fire('¡Actualizado!', 'Los datos han sido actualizados.', 'success');
+    loadTableData();
+    bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+  })
+  .catch(error => console.error('Error al actualizar:', error));
+});
+
+
+function loadTableData() {
+  fetch(scriptURL)
+    .then(response => response.json())
+    .then(data => {
+      const tableHead = document.getElementById('table-head');
+      const tableBody = document.getElementById('table-body');
+      tableHead.innerHTML = '';
+      tableBody.innerHTML = '';
+
+      // Agregar encabezados con "Acciones"
+      const headers = [...data[0], "Acciones"];
+      headers.forEach(header => {
+        const th = document.createElement('th');
+        th.textContent = header;
+        tableHead.appendChild(th);
+      });
+
+      // Generar filas de la tabla
+      data.slice(1).forEach((row, index) => {
+        const tr = document.createElement('tr');
+
+        // Agregar datos de la fila
+        row.forEach(cell => {
+          const td = document.createElement('td');
+          td.textContent = cell;
+          tr.appendChild(td);
+        });
+
+        // Crear celda de acciones
+        const actionTd = document.createElement('td');
+
+        // Botón Editar
+        const editButton = document.createElement('button');
+        editButton.innerHTML = '<i class="bi bi-pencil-square"></i> Editar';
+        editButton.classList.add('btn', 'btn-warning', 'btn-sm', 'me-2');
+        editButton.onclick = () => openEditModal(index + 2, row[0], row[1]); 
+
+
+        // Botón Eliminar
+        const deleteButton = document.createElement('button');
+        deleteButton.innerHTML = '<i class="bi bi-trash"></i> Eliminar';
+        deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+        deleteButton.onclick = () => confirmDelete(index + 2);
+
+        // Agregar botones a la celda
+        actionTd.appendChild(editButton);
+        actionTd.appendChild(deleteButton);
+        tr.appendChild(actionTd);
+        tableBody.appendChild(tr);
+      });
+    })
+    .catch(error => console.error('Error cargando datos:', error));
+}
+
+function openEditModal(rowIndex, cui, nombre) {
+  document.getElementById('edit-row-index').value = rowIndex;
+  document.getElementById('edit-cui').value = cui;
+  document.getElementById('edit-nombre').value = nombre;
+  var editModal = new bootstrap.Modal(document.getElementById('editModal'));
+  editModal.show();
+}
+
+  document.getElementById('edit-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  const rowIndex = document.getElementById('edit-row-index').value;
+  const cui = document.getElementById('edit-cui').value;
+  const nombre = document.getElementById('edit-nombre').value;
+
+  fetch(scriptURL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      editRow: rowIndex,
+      cui: cui,
+      nombre: nombre
+    })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.result === 'success') {
+      Swal.fire('Actualizado', 'Los datos han sido actualizados correctamente.', 'success');
+      loadTableData();
+      bootstrap.Modal.getInstance(document.getElementById('editModal')).hide();
+    } else {
+      Swal.fire('Error', 'No se pudo actualizar el registro.', 'error');
+    }
+  })
+  .catch(error => console.error('Error actualizando:', error));
+});
+
+
+    function confirmDelete(rowIndex) {
+      Swal.fire({
+        title: '¿Estás seguro?',
+        text: "Esta acción no se puede deshacer.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          deleteRow(rowIndex);
+        }
+      });
+    }
+
+   
+
+
+    function deleteRow(rowIndex) {
+      fetch(scriptURL + `?deleteRow=${rowIndex}`, { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+          if (data.result === 'success') {
+            Swal.fire('Eliminado', 'El estudiante ha sido eliminado correctamente.', 'success');
+            loadTableData();
+          } else {
+            Swal.fire('Error', 'Hubo un problema al eliminar el estudiante.', 'error');
+          }
+        })
+        .catch(error => console.error('Error eliminando:', error));
+    }
+
+    window.onload = loadTableData;
+
+
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+
+  
+
+</body>
+</html>
