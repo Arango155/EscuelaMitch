@@ -15,7 +15,7 @@
     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#registroModal">Nuevo Mes</button>
   </div>
 
-  <!-- Modal de Registro -->
+  <!-- Modal de Registro/Edición -->
   <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -25,19 +25,20 @@
         </div>
         <div class="modal-body">
           <form name="submit-to-google-sheet">
+            <input type="hidden" name="rowIndex" id="rowIndex">
             <div class="mb-3">
               <label for="mes" class="form-label">Mes</label>
-              <input name="mes" type="text" class="form-control" placeholder="Ejemplo: Enero" required>
+              <input name="mes" id="mes" type="text" class="form-control" placeholder="Ejemplo: Enero" required>
             </div>
             <div class="mb-3">
               <label for="fechaInicio" class="form-label">Fecha de Inicio</label>
-              <input name="fechaInicio" type="date" class="form-control" required>
+              <input name="fechaInicio" id="fechaInicio" type="date" class="form-control" required>
             </div>
             <div class="mb-3">
               <label for="totalPago" class="form-label">Total de Pago</label>
-              <input name="totalPago" type="number" class="form-control" required>
+              <input name="totalPago" id="totalPago" type="number" class="form-control" required>
             </div>
-            <button type="submit" class="btn btn-primary">Registrar</button>
+            <button type="submit" class="btn btn-primary">Guardar</button>
           </form>
         </div>
       </div>
@@ -56,12 +57,14 @@
   </div>
 
   <script>
-    const scriptURL = 'https://script.google.com/macros/s/YOUR_SCRIPT_URL/exec';
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxnVF2SUihjTGysgudjrj67VaHhtHpqUzLeaqQD1QII_FGPyUIEG0yzcCGpl0SmsEiuDg/exec';
     const form = document.forms['submit-to-google-sheet'];
 
     form.addEventListener('submit', e => {
       e.preventDefault();
-      fetch(scriptURL, { method: 'POST', body: new FormData(form) })
+      let formData = new FormData(form);
+      formData.append('sheet', 'Meses');
+      fetch(scriptURL, { method: 'POST', body: formData })
         .then(response => {
           console.log('Éxito!', response);
           loadTableData();
@@ -74,7 +77,7 @@
     });
 
     function loadTableData() {
-      fetch(scriptURL)
+      fetch(scriptURL + '?sheet=Meses')
         .then(response => response.json())
         .then(data => {
           const tableHead = document.getElementById('table-head');
@@ -98,11 +101,17 @@
             });
 
             const actionTd = document.createElement('td');
+            const editButton = document.createElement('button');
+            editButton.innerHTML = '<i class="bi bi-pencil"></i> Editar';
+            editButton.classList.add('btn', 'btn-warning', 'btn-sm', 'me-2');
+            editButton.onclick = () => editRow(index + 2, row);
+
             const deleteButton = document.createElement('button');
             deleteButton.innerHTML = '<i class="bi bi-trash"></i> Eliminar';
             deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
-            deleteButton.onclick = () => confirmDelete(index + 2);
+            deleteButton.onclick = () => deleteRow(index + 2);
 
+            actionTd.appendChild(editButton);
             actionTd.appendChild(deleteButton);
             tr.appendChild(actionTd);
             tableBody.appendChild(tr);
@@ -111,25 +120,27 @@
         .catch(error => console.error('Error cargando datos:', error));
     }
 
-    function confirmDelete(rowIndex) {
-      Swal.fire({
-        title: '¿Estás seguro?',
-        text: 'Esta acción no se puede deshacer.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-      }).then((result) => {
-        if (result.isConfirmed) {
-          deleteRow(rowIndex);
-        }
-      });
+    function editRow(rowIndex, rowData) {
+      document.getElementById('rowIndex').value = rowIndex;
+      document.getElementById('mes').value = rowData[0];
+      document.getElementById('fechaInicio').value = rowData[1];
+      document.getElementById('totalPago').value = rowData[2];
+      new bootstrap.Modal(document.getElementById('registroModal')).show();
     }
 
     function deleteRow(rowIndex) {
-      fetch(scriptURL + `?deleteRow=${rowIndex}`, { method: 'GET' })
+  Swal.fire({
+    title: '¿Estás seguro?',
+    text: 'Esta acción no se puede deshacer.',
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#3085d6',
+    confirmButtonText: 'Sí, eliminar',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (result.isConfirmed) {
+      fetch(scriptURL + `?deleteRow=${rowIndex}&sheet=Meses`, { method: 'GET' })
         .then(response => response.json())
         .then(data => {
           if (data.result === 'success') {
@@ -141,6 +152,8 @@
         })
         .catch(error => console.error('Error eliminando:', error));
     }
+  });
+}
 
     window.onload = loadTableData;
   </script>
