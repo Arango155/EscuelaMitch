@@ -17,3 +17,6 @@ setInterval(() => {
         document.body.innerHTML = "<h1>¡Acceso Denegado!</h1>";
     }
 }, 1000);
+
+
+

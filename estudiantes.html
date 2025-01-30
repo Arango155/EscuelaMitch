@@ -17,6 +17,15 @@
     <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#registroModal">Nuevo Registro</button>
   </div>
 
+  <div class="container my-3">
+    <button class="btn btn-outline-success" onclick="downloadExcel()">
+      <i class="bi bi-file-earmark-excel"></i> Descargar Excel
+    </button>
+    <button class="btn btn-outline-danger" onclick="downloadPDF()">
+      <i class="bi bi-file-earmark-pdf"></i> Descargar PDF
+    </button>
+  </div>
+
   <!-- Modal -->
   <div class="modal fade" id="registroModal" tabindex="-1" aria-labelledby="registroModalLabel" aria-hidden="true">
     <div class="modal-dialog">
@@ -287,14 +296,57 @@ function openEditModal(rowIndex, cui, nombre) {
 
     window.onload = loadTableData;
 
+    function downloadExcel() {
+  let table = document.querySelector("table");
+  let wb = XLSX.utils.table_to_book(table, {sheet: "Estudiantes"});
+  XLSX.writeFile(wb, "Estudiantes.xlsx");
+}
 
+function downloadPDF() {
+  let table = document.querySelector("table");
+  let data = [];
+
+  // Extraer encabezados
+  let headers = [];
+  table.querySelectorAll("thead th").forEach(th => headers.push(th.innerText));
+  data.push(headers);
+
+  // Extraer filas de la tabla
+  table.querySelectorAll("tbody tr").forEach(row => {
+    let rowData = [];
+    row.querySelectorAll("td").forEach(td => rowData.push(td.innerText));
+    data.push(rowData);
+  });
+
+  let docDefinition = {
+    content: [
+      { text: "Lista de Estudiantes", style: "header" },
+      {
+        table: {
+          headerRows: 1,
+          body: data
+        }
+      }
+    ],
+    styles: {
+      header: {
+        fontSize: 18,
+        bold: true,
+        margin: [0, 0, 0, 10]
+      }
+    }
+  };
+  pdfMake.createPdf(docDefinition).download("Estudiantes.pdf");
+}
   </script>
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 
   <script src="javascript.js"></script>
-  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.2.7/vfs_fonts.js"></script>
 
 </body>
 </html>
