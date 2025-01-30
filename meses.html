@@ -61,20 +61,33 @@
     const form = document.forms['submit-to-google-sheet'];
 
     form.addEventListener('submit', e => {
-      e.preventDefault();
-      let formData = new FormData(form);
-      formData.append('sheet', 'Meses');
-      fetch(scriptURL, { method: 'POST', body: formData })
-        .then(response => {
-          console.log('Éxito!', response);
-          loadTableData();
-          Swal.fire('Registro exitoso', 'El mes ha sido registrado correctamente.', 'success');
-          const modal = bootstrap.Modal.getInstance(document.getElementById('registroModal'));
-          modal.hide();
-          form.reset();
-        })
-        .catch(error => console.error('Error!', error.message));
-    });
+  e.preventDefault();
+  
+  let formData = new FormData(form);
+  formData.append('sheet', 'Meses');
+
+  let rowIndex = document.getElementById('rowIndex').value;
+  if (rowIndex) {
+    formData.append('editRow', rowIndex); // Enviar el índice si es una edición
+  }
+
+  fetch(scriptURL, { method: 'POST', body: formData })
+    .then(response => response.json())
+    .then(data => {
+      if (data.result === 'success') {
+        Swal.fire('Guardado correctamente', 'Los datos han sido actualizados.', 'success');
+        loadTableData();
+        const modal = bootstrap.Modal.getInstance(document.getElementById('registroModal'));
+        modal.hide();
+        form.reset();
+        document.getElementById('rowIndex').value = ''; // Limpiar campo oculto
+      } else {
+        Swal.fire('Error', 'No se pudo guardar.', 'error');
+      }
+    })
+    .catch(error => console.error('Error!', error.message));
+});
+
 
     function loadTableData() {
       fetch(scriptURL + '?sheet=Meses')
