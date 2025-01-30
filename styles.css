@@ -24,3 +24,67 @@
     width: 100%;
     padding: 2%;
 }
+
+.nav li:hover {
+    background-color: gray;
+    border-radius: 5px;
+  }
+  .nav li {
+    transition: background-color 0.3s ease-in-out;
+  }
+    
+  .director-container {
+    position: relative;
+    display: inline-block;
+  }
+  .logout-button {
+    display: none;
+    position: absolute;
+    width: 100%;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: red;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .director-container:hover .logout-button {
+    display: block;
+  }
+  html, body {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  body {
+    min-height: 100vh; /* Asegura que la página ocupe toda la altura de la ventana */
+  }
+  
+  .footer {
+    background-color: #343a40; /* Color oscuro */
+    color: white;
+    text-align: center;
+    padding: 15px 0;
+    width: 100%;
+    margin-top: auto; /* Empuja el footer hasta el final del contenido */
+  }
+  
+  .footer a {
+    color: #ffc107; /* Color amarillo */
+    text-decoration: none;
+  }
+  
+  .footer a:hover {
+    text-decoration: underline;
+  }
+  
+  .footer p {
+    margin: 5px 0;
+    font-size: 14px;
+  }
+  
